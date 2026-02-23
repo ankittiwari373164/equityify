@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { COURSES } from '@/data/seed'
+import { Suspense } from 'react';
 
 function fmt(n: number) { return n.toLocaleString('en-IN') }
 
@@ -87,6 +88,21 @@ function EnrollModal({ course, onClose }: { course: any, onClose: () => void }) 
       </div>
     </div>
   )
+}
+
+
+export default function ProgramsPage() {
+  return (
+    <main>
+      <h1>Our Trading Programs</h1>
+
+      {/* Wrap the component using useSearchParams in Suspense */}
+      <Suspense fallback={<div>Loading programs...</div>}>
+        <YourProgramsComponent /> 
+      </Suspense>
+
+    </main>
+  );
 }
 
 export default function ProgramsPage() {
