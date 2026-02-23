@@ -1,10 +1,9 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { COURSES } from '@/data/seed'
-export const dynamic = 'force-dynamic';
 
 function fmt(n: number) { return n.toLocaleString('en-IN') }
 
@@ -90,7 +89,8 @@ function EnrollModal({ course, onClose }: { course: any, onClose: () => void }) 
   )
 }
 
-export default function ProgramsPage() {
+// 1. We extracted your main logic into a sub-component
+function ProgramsContent() {
   const [selected, setSelected] = useState<any>(null)
   const [enrollCourse, setEnrollCourse] = useState<any>(null)
   const [filter, setFilter] = useState('All')
@@ -113,7 +113,6 @@ export default function ProgramsPage() {
       {enrollCourse && <EnrollModal course={enrollCourse} onClose={() => setEnrollCourse(null)} />}
 
       {selected ? (
-        /* Course Detail */
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}>
           <button onClick={() => setSelected(null)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: '#6B7280', fontSize: 14, cursor: 'pointer', marginBottom: 24 }}>
             ← Back to Programs
@@ -132,7 +131,6 @@ export default function ProgramsPage() {
                 )}
               </div>
 
-              {/* Curriculum */}
               <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0F172A', marginBottom: 20 }}>Curriculum</h2>
               {selected.curriculum.map((sec: any, i: number) => (
                 <div key={i} style={{ marginBottom: 20, border: '1px solid #E2E8F0', borderRadius: 12, overflow: 'hidden' }}>
@@ -147,7 +145,6 @@ export default function ProgramsPage() {
               ))}
             </div>
 
-            {/* Sidebar */}
             <div>
               <div style={{ background: '#fff', border: '2px solid #E2E8F0', borderRadius: 20, padding: 28, position: 'sticky', top: 80 }}>
                 <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -174,7 +171,6 @@ export default function ProgramsPage() {
           <style>{`@media(max-width:900px){.course-detail-grid{grid-template-columns:1fr!important;}}`}</style>
         </div>
       ) : (
-        /* Programs List */
         <div>
           <div style={{ background: 'linear-gradient(135deg,#0F172A,#1E293B)', padding: '60px 24px', textAlign: 'center' }}>
             <h1 style={{ fontSize: 44, fontWeight: 900, color: '#fff', marginBottom: 12 }}>Our Programs</h1>
@@ -182,7 +178,6 @@ export default function ProgramsPage() {
           </div>
 
           <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}>
-            {/* Filter */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 36, flexWrap: 'wrap' }}>
               {cats.map(c => (
                 <button key={c} onClick={() => setFilter(c)} style={{ padding: '8px 20px', borderRadius: 20, fontSize: 14, fontWeight: 600, border: filter === c ? 'none' : '1px solid #E2E8F0', background: filter === c ? '#DC2626' : '#fff', color: filter === c ? '#fff' : '#374151', cursor: 'pointer' }}>
@@ -238,5 +233,14 @@ export default function ProgramsPage() {
 
       <Footer />
     </>
+  )
+}
+
+// 2. Wrap the sub-component in a React Suspense boundary
+export default function ProgramsPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading programs...</div>}>
+      <ProgramsContent />
+    </Suspense>
   )
 }
