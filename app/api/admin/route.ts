@@ -30,14 +30,40 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
 
   if (action === 'add_course') {
-    const { data, error } = await supabaseAdmin.from('courses').insert({ ...body, active: true }).select().single()
+    const { data, error } = await supabaseAdmin.from('courses').insert({
+      title: body.title, subtitle: body.subtitle || '',
+      category: body.category || 'General',
+      price: parseInt(body.price) || 0, original_price: parseInt(body.original_price) || 0,
+      level: body.level || 'Beginner', badge: body.badge || '',
+      thumbnail: body.thumbnail || '📈',
+      is_free: body.is_free || false, is_live: body.is_live || false,
+      requires_approval: body.requires_approval !== false,
+      live_days: body.live_days || '', live_time: body.live_time || '', live_end_time: body.live_end_time || '',
+      meet_link: body.meet_link || '', duration: body.duration || '',
+      description: body.description || '', tags: body.tags || '',
+      curriculum: body.curriculum || [], active: true, students_count: 0,
+    }).select().single()
     if (error) return err(error.message)
     return ok({ id: data.id, message: 'Course created!' }, 201)
   }
 
   if (action === 'update_course') {
     const id = searchParams.get('id')
-    await supabaseAdmin.from('courses').update(body).eq('id', parseInt(id!))
+    if (!id) return err('Missing id.')
+    const { error } = await supabaseAdmin.from('courses').update({
+      title: body.title, subtitle: body.subtitle || '',
+      category: body.category || 'General',
+      price: parseInt(body.price) || 0, original_price: parseInt(body.original_price) || 0,
+      level: body.level || 'Beginner', badge: body.badge || '',
+      thumbnail: body.thumbnail || '📈',
+      is_free: body.is_free || false, is_live: body.is_live || false,
+      requires_approval: body.requires_approval !== false,
+      live_days: body.live_days || '', live_time: body.live_time || '', live_end_time: body.live_end_time || '',
+      meet_link: body.meet_link || '', duration: body.duration || '',
+      description: body.description || '', tags: body.tags || '',
+      curriculum: body.curriculum || [],
+    }).eq('id', parseInt(id))
+    if (error) return err(error.message)
     return ok({ message: 'Course updated!' })
   }
 
@@ -48,15 +74,24 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === 'add_blog') {
-    const slug = body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now()
-    const { data, error } = await supabaseAdmin.from('blogs').insert({ ...body, slug, published: true }).select().single()
+    const slug = (body.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now()
+    const { data, error } = await supabaseAdmin.from('blogs').insert({
+      title: body.title, slug, excerpt: body.excerpt || '',
+      content: body.content || '', author: body.author || 'Upanshu Asra',
+      category: body.category || 'General', tags: body.tags || '',
+      thumbnail: body.thumbnail || '📝', image_url: body.image_url || '', published: true,
+    }).select().single()
     if (error) return err(error.message)
     return ok({ id: data.id, message: 'Post created!' }, 201)
   }
 
   if (action === 'update_blog') {
     const id = searchParams.get('id')
-    await supabaseAdmin.from('blogs').update(body).eq('id', parseInt(id!))
+    await supabaseAdmin.from('blogs').update({
+      title: body.title, excerpt: body.excerpt, content: body.content,
+      category: body.category, tags: body.tags, thumbnail: body.thumbnail,
+      image_url: body.image_url || '', author: body.author || 'Upanshu Asra',
+    }).eq('id', parseInt(id!))
     return ok({ message: 'Post updated!' })
   }
 
@@ -86,7 +121,9 @@ export async function GET(req: NextRequest) {
 
   if (action === 'enrollments') {
     const status = searchParams.get('status')
-    let query = supabaseAdmin.from('enrollments').select(`id, status, amount, payment_method, note, meet_link, created_at, users(id,name,email,phone), courses(id,title)`).order('created_at', { ascending: false })
+    let query = supabaseAdmin.from('enrollments')
+      .select(`id, status, amount, payment_method, note, meet_link, created_at, users(id,name,email,phone), courses(id,title)`)
+      .order('created_at', { ascending: false })
     if (status && status !== 'All') query = query.eq('status', status)
     const { data } = await query
     return ok({ data: data || [] })
@@ -114,22 +151,12 @@ export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const action = searchParams.get('action')
   const id = searchParams.get('id')
-
   const admin = requireAdmin(req)
   if (!admin) return err('Admin access required.', 403)
 
-  if (action === 'delete_enrollment') {
-    await supabaseAdmin.from('enrollments').delete().eq('id', parseInt(id!))
-    return ok({ message: 'Deleted.' })
-  }
-  if (action === 'delete_course') {
-    await supabaseAdmin.from('courses').update({ active: false }).eq('id', parseInt(id!))
-    return ok({ message: 'Deleted.' })
-  }
-  if (action === 'delete_blog') {
-    await supabaseAdmin.from('blogs').delete().eq('id', parseInt(id!))
-    return ok({ message: 'Deleted.' })
-  }
+  if (action === 'delete_enrollment') { await supabaseAdmin.from('enrollments').delete().eq('id', parseInt(id!)); return ok({ message: 'Deleted.' }) }
+  if (action === 'delete_course') { await supabaseAdmin.from('courses').update({ active: false }).eq('id', parseInt(id!)); return ok({ message: 'Deleted.' }) }
+  if (action === 'delete_blog') { await supabaseAdmin.from('blogs').delete().eq('id', parseInt(id!)); return ok({ message: 'Deleted.' }) }
 
   return err('Unknown action.', 404)
 }
