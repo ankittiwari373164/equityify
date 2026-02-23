@@ -1,0 +1,211 @@
+═══════════════════════════════════════════════════════════════
+  EQUITYIFY — Next.js + Supabase Setup Guide
+  Complete step-by-step instructions
+═══════════════════════════════════════════════════════════════
+
+WHAT YOU HAVE:
+─────────────────────────────────────────────────────────────
+  Next.js 14 app with App Router
+  Supabase for real database (works on ALL browsers/devices)
+  All pages: Home, Programs, Services, Blog, About, Contact,
+             Dashboard, Admin Panel
+  JWT authentication with OTP email verification
+  Full admin panel: enrollments, users, courses, blog
+
+═══════════════════════════════════════════════════════════════
+  STEP 1: INSTALL NODE.JS
+═══════════════════════════════════════════════════════════════
+
+Download from: https://nodejs.org (LTS version)
+Verify: node --version (should be 18+)
+
+═══════════════════════════════════════════════════════════════
+  STEP 2: EXTRACT & INSTALL
+═══════════════════════════════════════════════════════════════
+
+1. Extract equityify.zip to a folder
+2. Open terminal in that folder
+3. Run: npm install
+4. Wait for packages to install (1-2 minutes)
+
+═══════════════════════════════════════════════════════════════
+  STEP 3: CREATE SUPABASE PROJECT (FREE)
+═══════════════════════════════════════════════════════════════
+
+1. Go to: https://supabase.com
+2. Click "Start your project" → Sign up free
+3. Click "New Project"
+   - Name: equityify
+   - Database Password: choose a strong one (save it!)
+   - Region: Southeast Asia (Singapore) — closest to India
+4. Wait ~2 minutes for project to be ready
+
+5. Get your API keys:
+   - Go to: Settings → API
+   - Copy "Project URL" → this is your SUPABASE_URL
+   - Copy "anon public" key → SUPABASE_ANON_KEY
+   - Copy "service_role secret" key → SUPABASE_SERVICE_ROLE_KEY
+
+═══════════════════════════════════════════════════════════════
+  STEP 4: SET UP DATABASE
+═══════════════════════════════════════════════════════════════
+
+1. In Supabase: click "SQL Editor" in the left sidebar
+2. Click "New Query"
+3. Open the file: supabase-setup.sql
+4. Copy ALL contents and paste into the SQL editor
+5. Click "Run" (green button)
+6. You should see: "Success. No rows returned"
+
+This creates all tables and seeds initial course data.
+
+═══════════════════════════════════════════════════════════════
+  STEP 5: CREATE .env.local FILE
+═══════════════════════════════════════════════════════════════
+
+1. Copy .env.local.example to .env.local
+   (rename the file, removing ".example")
+
+2. Fill in your values:
+
+   NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
+   SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...
+   JWT_SECRET=any_random_long_string_here
+   ADMIN_USERNAME=upanshu
+   ADMIN_PASSWORD=Equityify@2025!
+
+   (Leave EmailJS blank for now — OTP will show as an alert)
+
+═══════════════════════════════════════════════════════════════
+  STEP 6: RUN THE APP
+═══════════════════════════════════════════════════════════════
+
+In your terminal:
+  npm run dev
+
+Open browser: http://localhost:3000
+
+Test everything:
+  ✓ Home page loads with courses
+  ✓ Programs page shows 4 courses
+  ✓ Sign Up → OTP shown as alert → verify → Dashboard
+  ✓ Enroll in free demo → appears in Dashboard
+  ✓ Admin: http://localhost:3000/admin-login
+    → Login: upanshu / Equityify@2025!
+    → See all enrollments, users, blog
+
+═══════════════════════════════════════════════════════════════
+  STEP 7: SET UP EMAIL OTP (Optional but recommended)
+═══════════════════════════════════════════════════════════════
+
+Currently: OTP shows as a browser alert (works fine for testing)
+For real emails: Add EmailJS keys to .env.local
+
+1. Go to https://emailjs.com (free)
+2. Add Email Service → Gmail → connect your Gmail
+3. Create Email Template:
+   Subject: Your Equityify verification code
+   Body: Hi {{to_name}}, your code is: {{otp_code}}
+   To Email: {{to_email}}
+4. Copy Service ID, Template ID, Public Key
+5. Add to .env.local:
+   NEXT_PUBLIC_EMAILJS_SERVICE_ID=service_xxxxx
+   NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_xxxxx
+   NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=xxxxx
+
+═══════════════════════════════════════════════════════════════
+  STEP 8: DEPLOY TO VERCEL (Free hosting)
+═══════════════════════════════════════════════════════════════
+
+Option A — Vercel (Recommended, free):
+1. Push code to GitHub
+2. Go to vercel.com → Import project from GitHub
+3. Add all environment variables from .env.local
+4. Click Deploy → done! Live in 2 minutes
+
+Option B — Hostinger VPS:
+1. npm run build
+2. Upload build to server
+3. Run: npm start (or use PM2)
+
+═══════════════════════════════════════════════════════════════
+  FILE STRUCTURE
+═══════════════════════════════════════════════════════════════
+
+equityify/
+├── app/
+│   ├── page.tsx              ← Home page
+│   ├── programs/page.tsx     ← Programs + enrollment
+│   ├── services/page.tsx     ← Services page
+│   ├── blog/page.tsx         ← Blog list + post
+│   ├── about/page.tsx        ← About page
+│   ├── contact/page.tsx      ← Contact form
+│   ├── login/page.tsx        ← User login
+│   ├── signup/page.tsx       ← User signup + OTP
+│   ├── dashboard/page.tsx    ← Student dashboard
+│   ├── admin/page.tsx        ← Full admin panel
+│   ├── admin-login/page.tsx  ← Admin login
+│   └── api/                  ← All API routes
+│       ├── auth/route.ts
+│       ├── courses/route.ts
+│       ├── enrollments/route.ts
+│       ├── admin/route.ts
+│       ├── blog/route.ts
+│       └── contact/route.ts
+├── components/
+│   ├── Navbar.tsx
+│   ├── Footer.tsx
+│   └── Toast.tsx
+├── data/seed.ts              ← Fallback data (works without DB)
+├── lib/
+│   ├── supabase.ts
+│   ├── jwt.ts
+│   └── api.ts
+├── supabase-setup.sql        ← Run this in Supabase
+├── .env.local.example        ← Copy to .env.local and fill in
+└── package.json
+
+═══════════════════════════════════════════════════════════════
+  ADMIN PANEL FEATURES
+═══════════════════════════════════════════════════════════════
+
+  Dashboard  — total enrollments, revenue, stats
+  Enrollments — view all, filter by status, edit status,
+                add meet link, add notes, delete
+  Users      — see all registered students
+  Courses    — view all courses
+  Blog       — add/edit/delete blog posts
+
+Admin URL: /admin-login
+Credentials: Set in .env.local (ADMIN_USERNAME / ADMIN_PASSWORD)
+
+═══════════════════════════════════════════════════════════════
+  TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════
+
+"Module not found" error
+→ Run: npm install
+
+"Invalid Supabase URL"
+→ Check .env.local — URL must start with https://
+
+"Admin login fails"
+→ Check ADMIN_USERNAME and ADMIN_PASSWORD in .env.local
+
+"OTP not sent by email"
+→ OTP shows as alert in browser — still works for testing
+→ Add EmailJS keys for real email delivery
+
+"Courses not loading from database"
+→ App automatically falls back to seed data — still works
+→ Run supabase-setup.sql to populate the database
+
+═══════════════════════════════════════════════════════════════
+  SUPPORT
+═══════════════════════════════════════════════════════════════
+
+WhatsApp: +91-9289070030
+Email: equityify.in@gmail.com
+
+═══════════════════════════════════════════════════════════════
