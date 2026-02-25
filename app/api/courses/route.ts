@@ -8,11 +8,15 @@ export async function GET(req: NextRequest) {
   const action = searchParams.get('action')
   const id = searchParams.get('id')
 
-  // Try Supabase first, fall back to seed data
   if (action === 'list') {
     try {
-      const { data, error } = await supabaseAdmin.from('courses').select('*').eq('active', true).order('id')
-      if (!error && data?.length) return ok({ data })
+      const { data, error } = await supabaseAdmin
+        .from('courses')
+        .select('*')
+        .eq('active', true)
+        .order('id')
+      // Always return DB data if no error (even if empty array)
+      if (!error) return ok({ data: data || [] })
     } catch {}
     return ok({ data: COURSES })
   }
