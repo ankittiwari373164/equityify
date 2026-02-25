@@ -12,7 +12,7 @@ export default function BlogPage() {
   useEffect(() => {
     fetch('/api/blog?action=list')
       .then(r => r.json())
-      .then(d => { if (d.data?.length) setBlogs(d.data) })
+      .then(d => { if (d.data) setBlogs(d.data) })
       .catch(() => {})
   }, [])
 
