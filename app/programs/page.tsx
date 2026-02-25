@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -37,7 +37,7 @@ function EnrollModal({ course, onClose }: { course: any, onClose: () => void }) 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 460, overflow: 'hidden', maxHeight: '95vh', overflowY: 'auto' }}>
-        <div style={{ background: 'linear-gradient(135deg,#0F172A,#1E293B)', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ background: 'linear-gradient(135deg,#0F172A,#1E293B)', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: 28, marginBottom: 4 }}>{course.thumbnail}</div>
             <h3 style={{ color: '#fff', fontWeight: 800, fontSize: 15, margin: 0 }}>{course.title}</h3>
@@ -89,23 +89,31 @@ function EnrollModal({ course, onClose }: { course: any, onClose: () => void }) 
   )
 }
 
-// 1. We extracted your main logic into a sub-component
-function ProgramsContent() {
+export default function ProgramsPage() {
+  const [courses, setCourses] = useState<any[]>(COURSES)
   const [selected, setSelected] = useState<any>(null)
   const [enrollCourse, setEnrollCourse] = useState<any>(null)
   const [filter, setFilter] = useState('All')
   const searchParams = useSearchParams()
 
+  // ── Fetch live from DB ─────────────────────────────────────
+  useEffect(() => {
+    fetch('/api/courses?action=list')
+      .then(r => r.json())
+      .then(d => { if (d.data) setCourses(d.data) })
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     const id = searchParams.get('id')
-    if (id) {
-      const c = COURSES.find(c => c.id === parseInt(id))
+    if (id && courses.length) {
+      const c = courses.find((c: any) => String(c.id) === id)
       if (c) setSelected(c)
     }
-  }, [searchParams])
+  }, [searchParams, courses])
 
   const cats = ['All', 'Beginner', 'Intermediate', 'Advanced']
-  const filtered = filter === 'All' ? COURSES : COURSES.filter(c => c.level === filter)
+  const filtered = filter === 'All' ? courses : courses.filter((c: any) => c.level === filter)
 
   return (
     <>
@@ -113,8 +121,8 @@ function ProgramsContent() {
       {enrollCourse && <EnrollModal course={enrollCourse} onClose={() => setEnrollCourse(null)} />}
 
       {selected ? (
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}>
-          <button onClick={() => setSelected(null)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: '#6B7280', fontSize: 14, cursor: 'pointer', marginBottom: 24 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px 80px' }}>
+          <button onClick={() => setSelected(null)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#F1F5F9', border: 'none', color: '#374151', fontSize: 14, fontWeight: 600, padding: '8px 16px', borderRadius: 8, cursor: 'pointer', marginBottom: 28 }}>
             ← Back to Programs
           </button>
           <div className="course-detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 40 }}>
@@ -132,13 +140,22 @@ function ProgramsContent() {
               </div>
 
               <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0F172A', marginBottom: 20 }}>Curriculum</h2>
-              {selected.curriculum.map((sec: any, i: number) => (
+              {(Array.isArray(selected.curriculum) ? selected.curriculum : []).map((sec: any, i: number) => (
                 <div key={i} style={{ marginBottom: 20, border: '1px solid #E2E8F0', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ background: '#F8FAFC', padding: '14px 20px', fontWeight: 700, color: '#0F172A', fontSize: 15 }}>{sec.section}</div>
-                  {sec.lessons.map((l: any, j: number) => (
-                    <div key={j} style={{ padding: '12px 20px', borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 14, color: '#374151' }}>▶ {l.title}</span>
-                      <span style={{ fontSize: 12, color: '#94A3B8' }}>{l.duration}</span>
+                  {(sec.lessons || []).map((l: any, j: number) => (
+                    <div key={j} style={{ padding: '14px 20px', borderTop: '1px solid #F1F5F9' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <span style={{ fontSize: 14, color: '#374151', fontWeight: 500 }}>▶ {l.title}</span>
+                        <span style={{ fontSize: 12, color: '#94A3B8', flexShrink: 0, marginLeft: 12 }}>{l.duration}</span>
+                      </div>
+                      {l.video_url && (
+                        <a href={l.video_url} target="_blank" rel="noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#2563EB', fontWeight: 600, marginTop: 6 }}>
+                          🎥 Watch Lesson ↗
+                        </a>
+                      )}
+                      {l.content && <div style={{ fontSize: 12, color: '#6B7280', marginTop: 4, lineHeight: 1.5 }}>{l.content}</div>}
                     </div>
                   ))}
                 </div>
@@ -151,18 +168,21 @@ function ProgramsContent() {
                   <div style={{ fontSize: 36, fontWeight: 900, color: selected.is_free ? '#16A34A' : '#0F172A' }}>
                     {selected.is_free ? 'Free' : `₹${fmt(selected.price)}`}
                   </div>
-                  {selected.original_price > 0 && <div style={{ fontSize: 16, color: '#94A3B8', textDecoration: 'line-through' }}>₹{fmt(selected.original_price)}</div>}
-                  {selected.original_price > 0 && <div style={{ background: '#DCFCE7', color: '#16A34A', fontSize: 13, fontWeight: 700, padding: '4px 12px', borderRadius: 20, display: 'inline-block', marginTop: 8 }}>
-                    Save ₹{fmt(selected.original_price - selected.price)}
-                  </div>}
+                  {selected.original_price > 0 && <>
+                    <div style={{ fontSize: 16, color: '#94A3B8', textDecoration: 'line-through' }}>₹{fmt(selected.original_price)}</div>
+                    <div style={{ background: '#DCFCE7', color: '#16A34A', fontSize: 13, fontWeight: 700, padding: '4px 12px', borderRadius: 20, display: 'inline-block', marginTop: 8 }}>
+                      Save ₹{fmt(selected.original_price - selected.price)}
+                    </div>
+                  </>}
                 </div>
-                {[['⏱', 'Duration', selected.duration], ['📊', 'Level', selected.level], ['👥', 'Students', `${fmt(selected.students_count)}+`], ['🎓', 'Instructor', 'Upanshu Asra']].map(([icon, l, v]) => (
+                {[['⏱', 'Duration', selected.duration], ['📊', 'Level', selected.level], ['👥', 'Students', `${fmt(selected.students_count || 0)}+`], ['🎓', 'Instructor', 'Upanshu Asra']].map(([icon, l, v]) => (
                   <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #F1F5F9', fontSize: 14 }}>
                     <span style={{ color: '#6B7280' }}>{icon} {l}</span>
                     <span style={{ fontWeight: 600, color: '#0F172A' }}>{v}</span>
                   </div>
                 ))}
-                <button onClick={() => setEnrollCourse(selected)} style={{ width: '100%', marginTop: 20, background: selected.is_free ? 'linear-gradient(135deg,#16A34A,#15803D)' : 'linear-gradient(135deg,#DC2626,#B91C1C)', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+                <button onClick={() => setEnrollCourse(selected)}
+                  style={{ width: '100%', marginTop: 20, background: selected.is_free ? 'linear-gradient(135deg,#16A34A,#15803D)' : 'linear-gradient(135deg,#DC2626,#B91C1C)', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
                   {selected.is_free ? 'Enroll Free Now →' : 'Request Enrollment →'}
                 </button>
               </div>
@@ -176,18 +196,14 @@ function ProgramsContent() {
             <h1 style={{ fontSize: 44, fontWeight: 900, color: '#fff', marginBottom: 12 }}>Our Programs</h1>
             <p style={{ color: '#94A3B8', fontSize: 16 }}>Professional stock market education for every level</p>
           </div>
-
-          <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px 80px' }}>
             <div style={{ display: 'flex', gap: 10, marginBottom: 36, flexWrap: 'wrap' }}>
               {cats.map(c => (
-                <button key={c} onClick={() => setFilter(c)} style={{ padding: '8px 20px', borderRadius: 20, fontSize: 14, fontWeight: 600, border: filter === c ? 'none' : '1px solid #E2E8F0', background: filter === c ? '#DC2626' : '#fff', color: filter === c ? '#fff' : '#374151', cursor: 'pointer' }}>
-                  {c}
-                </button>
+                <button key={c} onClick={() => setFilter(c)} style={{ padding: '8px 20px', borderRadius: 20, fontSize: 14, fontWeight: 600, border: filter === c ? 'none' : '1px solid #E2E8F0', background: filter === c ? '#DC2626' : '#fff', color: filter === c ? '#fff' : '#374151', cursor: 'pointer' }}>{c}</button>
               ))}
             </div>
-
             <div className="programs-list-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 28 }}>
-              {filtered.map(c => (
+              {filtered.map((c: any) => (
                 <div key={c.id} className="card-hover" style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 20, overflow: 'hidden' }}>
                   <div style={{ background: 'linear-gradient(135deg,#0F172A,#1E293B)', padding: 32, position: 'relative' }}>
                     {c.badge && <div style={{ position: 'absolute', top: 16, right: 16, background: c.is_free ? '#16A34A' : '#DC2626', color: '#fff', fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 20 }}>{c.badge}</div>}
@@ -206,9 +222,9 @@ function ProgramsContent() {
                   <div style={{ padding: 24 }}>
                     <p style={{ fontSize: 14, color: '#6B7280', lineHeight: 1.7, marginBottom: 20 }}>{c.description}</p>
                     <div style={{ display: 'flex', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
-                      {[['⏱', c.duration], ['📊', c.level], ['👥', `${fmt(c.students_count)}+ students`]].map(([icon, v]) => (
-                        <span key={v} style={{ fontSize: 13, color: '#6B7280' }}>{icon} {v}</span>
-                      ))}
+                      <span style={{ fontSize: 13, color: '#6B7280' }}>⏱ {c.duration}</span>
+                      <span style={{ fontSize: 13, color: '#6B7280' }}>📊 {c.level}</span>
+                      <span style={{ fontSize: 13, color: '#6B7280' }}>👥 {fmt(c.students_count || 0)}+ students</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
@@ -227,20 +243,14 @@ function ProgramsContent() {
               ))}
             </div>
           </div>
-          <style>{`@media(max-width:900px){.programs-list-grid{grid-template-columns:1fr!important;}}`}</style>
+          <style>{`
+            @media(max-width:900px){.programs-list-grid{grid-template-columns:1fr!important;}}
+            .card-hover{transition:transform 0.2s,box-shadow 0.2s}
+            .card-hover:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,0.12)}
+          `}</style>
         </div>
       )}
-
       <Footer />
     </>
-  )
-}
-
-// 2. Wrap the sub-component in a React Suspense boundary
-export default function ProgramsPage() {
-  return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading programs...</div>}>
-      <ProgramsContent />
-    </Suspense>
   )
 }
