@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -89,14 +89,14 @@ function EnrollModal({ course, onClose }: { course: any, onClose: () => void }) 
   )
 }
 
-export default function ProgramsPage() {
+// Inner component that uses useSearchParams — must be inside Suspense
+function ProgramsContent() {
   const [courses, setCourses] = useState<any[]>(COURSES)
   const [selected, setSelected] = useState<any>(null)
   const [enrollCourse, setEnrollCourse] = useState<any>(null)
   const [filter, setFilter] = useState('All')
   const searchParams = useSearchParams()
 
-  // ── Fetch live from DB ─────────────────────────────────────
   useEffect(() => {
     fetch('/api/courses?action=list')
       .then(r => r.json())
@@ -117,7 +117,6 @@ export default function ProgramsPage() {
 
   return (
     <>
-      <Navbar />
       {enrollCourse && <EnrollModal course={enrollCourse} onClose={() => setEnrollCourse(null)} />}
 
       {selected ? (
@@ -250,6 +249,18 @@ export default function ProgramsPage() {
           `}</style>
         </div>
       )}
+    </>
+  )
+}
+
+// Outer page wraps everything in Suspense (required for useSearchParams)
+export default function ProgramsPage() {
+  return (
+    <>
+      <Navbar />
+      <Suspense fallback={<div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8', fontSize: 16 }}>Loading programs…</div>}>
+        <ProgramsContent />
+      </Suspense>
       <Footer />
     </>
   )
