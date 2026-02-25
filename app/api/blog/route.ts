@@ -10,8 +10,13 @@ export async function GET(req: NextRequest) {
 
   if (action === 'list') {
     try {
-      const { data, error } = await supabaseAdmin.from('blogs').select('id,title,slug,excerpt,author,category,tags,thumbnail,views,created_at').eq('published', true).order('created_at', { ascending: false })
-      if (!error && data?.length) return ok({ data })
+      const { data, error } = await supabaseAdmin
+        .from('blogs')
+        .select('id,title,slug,excerpt,author,category,tags,thumbnail,image_url,views,created_at')
+        .eq('published', true)
+        .order('created_at', { ascending: false })
+      // Always return DB data if no error (even if empty array)
+      if (!error) return ok({ data: data || [] })
     } catch {}
     return ok({ data: BLOGS })
   }
