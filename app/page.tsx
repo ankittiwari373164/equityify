@@ -3,17 +3,17 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { COURSES, SERVICES } from '@/data/seed'
+import { SERVICES } from '@/data/seed'
 
 function fmt(n: number) { return n.toLocaleString('en-IN') }
 
 export default function HomePage() {
-  const [courses, setCourses] = useState<any[]>(COURSES)
+  const [courses, setCourses] = useState<any[]>([])
 
   useEffect(() => {
     fetch('/api/courses?action=list')
       .then(r => r.json())
-      .then(d => { if (d.data) setCourses(d.data); console.log('[home] source:', d.source, 'count:', d.data?.length) })
+      .then(d => { if (d.data) setCourses(d.data) })
       .catch(() => {})
   }, [])
 
@@ -102,6 +102,16 @@ export default function HomePage() {
               <h2 style={{ fontSize: 40, fontWeight: 900, color: '#0F172A' }}>Programs by <span style={{ color: '#DC2626' }}>Upanshu Asra</span></h2>
             </div>
             <div className="programs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
+              {courses.length === 0 && [1,2,3,4].map(i => (
+                <div key={i} style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 16, overflow: 'hidden', animation: 'pulse 1.5s ease-in-out infinite' }}>
+                  <div style={{ background: '#E2E8F0', height: 160 }} />
+                  <div style={{ padding: 20 }}>
+                    <div style={{ background: '#E2E8F0', height: 16, borderRadius: 6, marginBottom: 10 }} />
+                    <div style={{ background: '#E2E8F0', height: 12, borderRadius: 6, width: '60%', marginBottom: 16 }} />
+                    <div style={{ background: '#E2E8F0', height: 36, borderRadius: 8 }} />
+                  </div>
+                </div>
+              ))}
               {courses.slice(0, 4).map((c: any) => (
                 <div key={c.id} className="card-hover" style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16, overflow: 'hidden' }}>
                   <div style={{ background: 'linear-gradient(135deg,#0F172A,#1E293B)', padding: '28px 20px', textAlign: 'center', position: 'relative' }}>
