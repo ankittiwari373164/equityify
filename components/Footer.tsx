@@ -9,8 +9,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#DC2626,#B91C1C)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>📈</div>
-              <span style={{ color: '#fff', fontWeight: 800, fontSize: 20 }}>Equityify</span>
+              <img src="/images/logo.png" alt="Equityify" style={{ height: 40, width: 'auto', objectFit: 'contain' }} />
             </div>
             <p style={{ fontSize: 14, lineHeight: 1.8, marginBottom: 20, color: '#64748B' }}>
               Professional stock market education by Upanshu Asra. 7+ years experience, NISM certified.
