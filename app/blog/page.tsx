@@ -93,9 +93,14 @@ export default function BlogPage() {
       ) : (
         /* ── BLOG LIST ── */
         <div>
-          <div style={{ background: 'linear-gradient(135deg,#0F172A,#1E293B)', padding: '60px 24px', textAlign: 'center' }}>
-            <h1 style={{ fontSize: 44, fontWeight: 900, color: '#fff', marginBottom: 12 }}>Market Insights Blog</h1>
-            <p style={{ color: '#94A3B8', fontSize: 16 }}>Expert analysis, trading tips, and financial market education</p>
+          <div style={{ position:'relative', overflow:'hidden', padding: '60px 24px', textAlign: 'center' }}>
+            <div style={{ position:'absolute', inset:0, backgroundImage:'url(/images/trading-desk-1.jpg)', backgroundSize:'cover', backgroundPosition:'center' }} />
+            <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,rgba(10,14,26,0.96),rgba(10,14,26,0.88))' }} />
+            <div style={{ position:'relative', zIndex:1, padding:'20px 0' }}>
+              <div style={{ color:'#F87171', fontSize:12, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:10 }}>INSIGHTS & ANALYSIS</div>
+              <h1 style={{ fontSize: 48, fontWeight: 900, color: '#fff', marginBottom: 12 }}>Market Insights Blog</h1>
+              <p style={{ color: '#94A3B8', fontSize: 16, maxWidth:500, margin:'0 auto' }}>Expert analysis, trading tips, and financial market education from Upanshu Asra</p>
+            </div>
           </div>
 
           <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px 80px' }}>
